@@ -25,7 +25,7 @@ matrix:
 script:
   - if [ "$TRAVIS_ELIXIR_VERSION" = "1.6.6" ]; then mix format --check-formatted --dry-run; fi
   - MIX_ENV=test mix compile && mix test
-  - if [ "$TRAVIS_ELIXIR_VERSION" = "1.6.6" ] && [ "$TRAVIS_OTP_RELEASE" = "21.0" ]; then mix dialyzer; fi
+  - if [ "$TRAVIS_ELIXIR_VERSION" = "1.6.6" ] && [ "$TRAVIS_OTP_RELEASE" = "21.0" ]; then mix dialyzer; mix coveralls.travis; fi
 
 cache:
   directories:
