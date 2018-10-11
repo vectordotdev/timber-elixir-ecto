@@ -1,6 +1,6 @@
 # 🌲 Timber integration for Ecto
 
-[![ISC License](https://img.shields.io/badge/license-ISC-ff69b4.svg)](LICENSE.md)
+[![ISC License](https://img.shields.io/badge/license-ISC-ff69b4.svg)](https://github.com/timberio/timber-elixir-ecto/blob/master/LICENSE)
 [![Hex.pm](https://img.shields.io/hexpm/v/timber-ecto.svg?maxAge=18000=plastic)](https://hex.pm/packages/timber-ecto)
 [![Documentation](https://img.shields.io/badge/hexdocs-latest-blue.svg)](https://hexdocs.pm/timber-ecto/index.html)
 [![Build Status](https://travis-ci.org/timberio/timber-elixir-ecto.svg?branch=master)](https://travis-ci.org/timberio/timber-elixir-ecto)
@@ -58,4 +58,5 @@ time will be logged.
 
 ## License
 
-This project is licensed under the ISC License - see [LICENSE] for more details.
+This project is licensed under the ISC license. See the file `LICENSE` for the
+full text.
