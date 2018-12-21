@@ -1,7 +1,7 @@
 defmodule Timber.Ecto.MixProject do
   use Mix.Project
 
-  @version "1.0.0-alpha.1"
+  @version "1.0.0"
   @source_url "https://github.com/timberio/timber-elixir-ecto"
   @homepage_url "https://github.com/timberio/timber-elixir-ecto"
   @project_description """
@@ -104,16 +104,16 @@ defmodule Timber.Ecto.MixProject do
   defp deps do
     [
       {:ecto, "~> 2.0"},
-      {:timber, "~> 3.0.0-alpha.1"},
+      {:timber, "~> 3.0"},
 
       #
       # Tooling
       #
 
-      {:credo, "~> 0.10", only: [:dev, :test]},
+      {:credo, "~> 1.0", only: [:dev, :test]},
       {:dialyxir, "~> 0.5", only: [:dev, :test]},
       {:earmark, "~> 1.2", only: [:dev]},
-      {:ex_doc, "~> 0.18.0", only: [:dev]},
+      {:ex_doc, "~> 0.19.0", only: [:dev]},
       {:excoveralls, "~> 0.10", only: [:dev, :test]}
     ]
   end
