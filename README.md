@@ -7,6 +7,8 @@
 
 The Timber Ecto library provides enhanced logging for your Ecto queries.
 
+Need Ecto 2.x support? Ecto 2 support is maintained on the [v1.x branch](https://github.com/timberio/timber-elixir-ecto/tree/v1.x).
+
 ## Installation
 
 Ensure that you have both `:timber` (version 3.0.0 or later) and `:timber_ecto` listed
