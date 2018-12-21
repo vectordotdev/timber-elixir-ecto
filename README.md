@@ -31,7 +31,23 @@ in `config/config.exs` would look like this:
 use Mix.Config
 
 config :my_app, MyApp.Repo,
-  loggers: [{Timber.Ecto, :log, []}]
+  log: false
+```
+
+You'll also have to attach Timber's Telemetry event handler in the Repo's `init` callback:
+
+```elixir
+# lib/my_app/repo.ex
+def init(_, opts) do
+  :ok = Telemetry.attach(
+    "timber-ecto-query-handler",
+    [:my_app, :repo, :query],
+    Timber.Ecto,
+    :handle_event,
+    []
+  )
+  {:ok, opts}
+end
 ```
 
 For more information, see the documentation for the
@@ -49,8 +65,13 @@ Logging SQL queries can be useful but noisy. To reduce the volume of SQL queries
 you can limit your logging to queries that surpass an execution time threshold:
 
 ```elixir
-config :timber_ecto,
-  query_time_ms_threshold: 2_000 # 2 seconds
+:ok = Telemetry.attach(
+  "timber-ecto-query-handler",
+  [:my_app, :repo, :query],
+  Timber.Ecto,
+  :handle_event,
+  [query_time_ms_threshold: 2_000]
+  )
 ```
 
 In the above example, only queries that exceed 2 seconds in execution

@@ -2,36 +2,53 @@ defmodule Timber.Ecto do
   @moduledoc """
   Timber integration for Ecto.
 
-  Timber can hook into Ecto's logging system to gather information about queries
+  Timber can hook into Ecto's Telemetry events to gather information about queries
   including the text of the query and the time it took to execute. This
   information is then logged as a `Timber.Events.SQLQueryEvent`.
 
-  To install Timber's Ecto event collector, you only need to modify the
-  application configuration on a per-repository basis. Each repository has a
-  configuration key `:loggers` that accepts a list of three element tuples where
-  each tuple describes a log event consumer. If you do not have a `:loggers` key
-  specified, Ecto uses the default list of `[{Ecto.LogEntry, :log, []}]` which
-  tells the repository to log every event to `Ecto.LogEntry.log/1`. In order to
-  avoid duplicate logging, you will want to make sure it isn't in the list when
-  using this event collector.
+  To install Timber's Ecto event collector, you will need to modify the
+  application configuration on a per-repository basis. Each repository has to
+  have the Timber handler attached. The best place to do it is in the
+  repository's `init` callback. It is important to note that the first
+  argument must be unique, and the second is based on Ecto's default
+  Telemetry event prefix.  More information can be found in the docs
+  for `Ecto.Repo`.
 
-  The tuple for Timber's event collector is `{Timber.Integrations.EctoLogger,
-  :log, []}`. Many applications will have only one repository named `Repo`,
-  which makes adding this easy. For example, to add it to the repository
-  `MyApp.Repo`:
+  ```elixir
+  # lib/my_app/repo.ex
+  def init(_, opts) do
+    :ok = Telemetry.attach(
+      "timber-ecto-query-handler",
+      [:my_app, :repo, :query],
+      Timber.Ecto,
+      :handle_event,
+      []
+    )
+    {:ok, opts}
+  end
+  ```
+
+  Each repository has a configuration key `:log` that controls whether Ecto
+  logs query information. By default, it is enabled. In order to avoid duplicate
+  logging, you will want to make sure it is set to false.
 
   ```elixir
   config :my_app, MyApp.Repo,
-    loggers: [{Timber.Ecto, :log, []}]
+    log: false
   ```
 
   By default, queries are logged at the `:debug` level. If you want to use a
-  custom level, simply add it to the list of arguments. For example, to log
-  every query at the `:info` level:
+  different level, the `:log_level` option can be passed to the
+  `Telemetry.attach` call:
 
   ```elixir
-  config :my_app, MyApp.Repo,
-    loggers: [{Timber.Ecto, :log, [:info]}]
+  :ok = Telemetry.attach(
+    "timber-ecto-query-handler",
+    [:my_app, :repo, :query],
+    Timber.Ecto,
+    :handle_event,
+    [log_level: :info]
+    )
   ```
 
   ### Timing
@@ -47,8 +64,14 @@ defmodule Timber.Ecto do
   order for the query to be logged:
 
   ```elixir
-  config :timber_ecto,
-    query_time_ms_threshold: 2_000 # 2 seconds
+  :ok = Telemetry.attach(
+    "timber-ecto-query-handler",
+    [:my_app, :repo, :query],
+    Timber.Ecto,
+    :handle_event,
+    [query_time_ms_threshold: 2_000]
+    )
+  ```
   ```
 
   In the above example, only queries that exceed 2 seconds in execution time
@@ -60,71 +83,25 @@ defmodule Timber.Ecto do
   alias Timber.Event
   alias Timber.Events.SQLQueryEvent
 
-  @doc """
-  Identical to `log/2` except that it uses a default level of `:debug`
-  """
-  @spec log(Ecto.LogEntry.t()) :: Ecto.LogEntry.t()
-  def log(event) do
-    log(event, :debug)
-  end
+  def handle_event([_app, _repo, :query], _value, metadata, config) do
+    query_time_ms_threshold = Keyword.get(config, :query_time_ms_threshold, 0)
+    log_level = Keyword.get(config, :log_level, :debug)
 
-  @doc """
-  Takes an `Ecto.LogEntry` struct and logs it as a `Timber.Event.SQLQueryEvent`
-  event at the designated level
+    with {:ok, time} when is_integer(time) <- Map.fetch(metadata, :query_time),
+         {:ok, query} <- Map.fetch(metadata, :query),
+         time_ms <- System.convert_time_unit(time, :native, :milliseconds),
+         true <- time_ms >= query_time_ms_threshold do
+      event = %SQLQueryEvent{
+        sql: query,
+        time_ms: time_ms
+      }
 
-  This function is designed to be called from Ecto's built-in logging system
-  (see the module's documentation). It takes an `Ecto.LogEntry` entry struct and
-  parses it into a `Timber.Event.SQLQueryEvent` which is then logged at the
-  designated level.
-  """
-  @spec log(Ecto.LogEntry.t(), Logger.level()) :: Ecto.LogEntry.t()
-  def log(%{query: query, query_time: time_native} = entry, level) when is_integer(time_native) do
-    case resolve_query(query, entry) do
-      {:ok, query_text} ->
-        # The time is given in native units which the VM determines. We have
-        # to convert them to the desired unit
-        time_ms = System.convert_time_unit(time_native, :native, :milliseconds)
-        query_time_ms_threshold = get_query_time_ms_threshold()
+      message = SQLQueryEvent.message(event)
+      metadata = Event.to_metadata(event)
 
-        if time_ms >= query_time_ms_threshold do
-          event = %SQLQueryEvent{
-            sql: query_text,
-            time_ms: time_ms
-          }
-
-          message = SQLQueryEvent.message(event)
-          metadata = Event.to_metadata(event)
-
-          Logger.log(level, message, metadata)
-        end
-
-        entry
-
-      {:error, :no_query} ->
-        entry
+      Logger.log(log_level, message, metadata)
     end
+
+    :ok
   end
-
-  # time_native above is not an integer as expected. This is required and a violation of the
-  # type spec. Queries of this nature will be ignored.
-  def log(entry, _level) do
-    entry
-  end
-
-  # Interestingly, the query is not necessarily a String.t, it
-  # can also be a single-arity function which, given the log entry
-  # as a parameter, will return a String.t
-  #
-  # resolve_query will either determine that it's a String.t and
-  # return it or resolve the function to get a String.t
-  #
-  # It's possible this is a hold-over from Ecto 1
-  @spec resolve_query(String.t() | (Ecto.LogEntry.t() -> String.t()), Ecto.LogEntry.t()) ::
-          {:ok, String.t()} | {:error, :no_query}
-  defp resolve_query(q, entry) when is_function(q), do: {:ok, q.(entry)}
-  defp resolve_query(q, _) when is_binary(q), do: {:ok, q}
-  defp resolve_query(_q, _entry), do: {:error, :no_query}
-
-  defp config, do: Elixir.Application.get_env(:timber_ecto, __MODULE__, [])
-  defp get_query_time_ms_threshold, do: Keyword.get(config(), :query_time_ms_threshold, 0)
 end
