@@ -1,8 +1,8 @@
 # 🌲 Timber integration for Ecto
 
 [![ISC License](https://img.shields.io/badge/license-ISC-ff69b4.svg)](https://github.com/timberio/timber-elixir-ecto/blob/master/LICENSE)
-[![Hex.pm](https://img.shields.io/hexpm/v/timber-ecto.svg?maxAge=18000=plastic)](https://hex.pm/packages/timber-ecto)
-[![Documentation](https://img.shields.io/badge/hexdocs-latest-blue.svg)](https://hexdocs.pm/timber-ecto/index.html)
+[![Hex.pm](https://img.shields.io/hexpm/v/timber_ecto.svg?maxAge=18000=plastic)](https://hex.pm/packages/timber_ecto)
+[![Documentation](https://img.shields.io/badge/hexdocs-latest-blue.svg)](https://hexdocs.pm/timber_ecto/readme.html)
 [![Build Status](https://travis-ci.org/timberio/timber-elixir-ecto.svg?branch=master)](https://travis-ci.org/timberio/timber-elixir-ecto)
 
 The Timber Ecto library provides enhanced logging for your Ecto queries.
@@ -53,7 +53,7 @@ end
 ```
 
 For more information, see the documentation for the
-[Timber.Ecto](https://hexdocs.pm/timber-ecto/Timber.Ecto.html) module.
+[Timber.Ecto](https://hexdocs.pm/timber_ecto/Timber.Ecto.html) module.
 
 ### Notes for Umbrella Applications
 
