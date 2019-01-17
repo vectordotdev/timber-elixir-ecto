@@ -89,7 +89,7 @@ defmodule Timber.Ecto do
 
     with {:ok, time} when is_integer(time) <- Map.fetch(metadata, :query_time),
          {:ok, query} <- Map.fetch(metadata, :query),
-         time_ms <- System.convert_time_unit(time, :native, :milliseconds),
+         time_ms <- System.convert_time_unit(time, :native, :millisecond),
          true <- time_ms >= query_time_ms_threshold do
       event = %SQLQueryEvent{
         sql: query,
