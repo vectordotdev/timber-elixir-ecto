@@ -18,7 +18,7 @@ as dependencies in `mix.exs`:
 def deps do
   [
     {:timber, "~> 3.0"},
-    {:timber_ecto, "~> 1.0"}
+    {:timber_ecto, "~> 2.0"}
   ]
 end
 ```
