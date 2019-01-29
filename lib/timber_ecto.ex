@@ -80,26 +80,24 @@ defmodule Timber.Ecto do
 
   require Logger
 
-  alias Timber.Event
-  alias Timber.Events.SQLQueryEvent
-
   def handle_event([_app, _repo, :query], _value, metadata, config) do
     query_time_ms_threshold = Keyword.get(config, :query_time_ms_threshold, 0)
     log_level = Keyword.get(config, :log_level, :debug)
 
     with {:ok, time} when is_integer(time) <- Map.fetch(metadata, :query_time),
          {:ok, query} <- Map.fetch(metadata, :query),
-         time_ms <- System.convert_time_unit(time, :native, :millisecond),
-         true <- time_ms >= query_time_ms_threshold do
-      event = %SQLQueryEvent{
-        sql: query,
-        time_ms: time_ms
+         duration_ms <- System.convert_time_unit(time, :native, :millisecond),
+         true <- duration_ms >= query_time_ms_threshold do
+      event = %{
+        sql_query_executed: %{
+          sql: query,
+          duration_ms: duration_ms
+        }
       }
 
-      message = SQLQueryEvent.message(event)
-      metadata = Event.to_metadata(event)
+      message = ["Processed ", query, " in ", to_string(duration_ms), "ms"]
 
-      Logger.log(log_level, message, metadata)
+      Logger.log(log_level, message, event: event)
     end
 
     :ok
