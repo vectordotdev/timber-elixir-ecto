@@ -8,23 +8,24 @@ defmodule Timber.Ecto do
 
   To install Timber's Ecto event collector, you will need to modify the
   application configuration on a per-repository basis. Each repository has to
-  have the Timber handler attached. The best place to do it is in the
-  repository's `init` callback. It is important to note that the first
+  have the Timber handler attached. The best place to do it is in your
+  application's `start` callback. It is important to note that the first
   argument must be unique, and the second is based on Ecto's default
   Telemetry event prefix.  More information can be found in the docs
   for `Ecto.Repo`.
 
   ```elixir
-  # lib/my_app/repo.ex
-  def init(_, opts) do
-    :ok = Telemetry.attach(
+  # lib/my_app/application.ex
+  def start(_type, _args) do
+    # ...
+    :ok = :telemetry.attach(
       "timber-ecto-query-handler",
       [:my_app, :repo, :query],
-      Timber.Ecto,
-      :handle_event,
+      &Timber.Ecto.handle_event/4,
       []
     )
-    {:ok, opts}
+    # ...
+    Supervisor.start_link(children, opts)
   end
   ```
 
@@ -42,11 +43,10 @@ defmodule Timber.Ecto do
   `Telemetry.attach` call:
 
   ```elixir
-  :ok = Telemetry.attach(
+  :ok = :telemetry.attach(
     "timber-ecto-query-handler",
     [:my_app, :repo, :query],
-    Timber.Ecto,
-    :handle_event,
+    &Timber.Ecto.handle_event/4,
     [log_level: :info]
     )
   ```
@@ -64,11 +64,10 @@ defmodule Timber.Ecto do
   order for the query to be logged:
 
   ```elixir
-  :ok = Telemetry.attach(
+  :ok = :telemetry.attach(
     "timber-ecto-query-handler",
     [:my_app, :repo, :query],
-    Timber.Ecto,
-    :handle_event,
+    &Timber.Ecto.handle_event/4,
     [query_time_ms_threshold: 2_000]
     )
   ```
