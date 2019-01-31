@@ -36,19 +36,20 @@ config :my_app, MyApp.Repo,
   log: false
 ```
 
-You'll also have to attach Timber's Telemetry event handler in the Repo's `init` callback:
+You'll also have to attach Timber's Telemetry event handler in your Application's `start` callback:
 
 ```elixir
-# lib/my_app/repo.ex
-def init(_, opts) do
-  :ok = Telemetry.attach(
+# lib/my_app/application.ex
+def start(_type, _args) do
+  # ...
+  :ok = :telemetry.attach(
     "timber-ecto-query-handler",
     [:my_app, :repo, :query],
-    Timber.Ecto,
-    :handle_event,
+    &Timber.Ecto.handle_event/4,
     []
   )
-  {:ok, opts}
+  # ...
+  Supervisor.start_link(children, opts)
 end
 ```
 
