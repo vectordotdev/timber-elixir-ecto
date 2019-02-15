@@ -11,47 +11,47 @@ Need Ecto 2.x support? Ecto 2 support is maintained on the [v1.x branch](https:/
 
 ## Installation
 
-Ensure that you have both `:timber` (version 3.0.0 or later) and `:timber_ecto` listed
+1. Ensure that you have both `:timber` (version 3.0.0 or later) and `:timber_ecto` listed
 as dependencies in `mix.exs`:
 
-```elixir
-def deps do
-  [
-    {:timber, "~> 3.0"},
-    {:timber_ecto, "~> 2.0"}
-  ]
-end
-```
+    ```elixir
+    def deps do
+      [
+        {:timber, "~> 3.0"},
+        {:timber_ecto, "~> 2.0"}
+      ]
+    end
+    ```
 
-Then run `mix deps.get`.
+2. Run `mix deps.get` to get the dependencies.
 
-You'll need to add a configuration line for every Ecto Repo. For example, if you
+3. Add a configuration line for every Ecto Repo. For example, if you
 have the application `:my_app` and the Ecto Repo `MyApp.Repo`, the configuration
 in `config/config.exs` would look like this:
 
-```elixir
-use Mix.Config
+    ```elixir
+    use Mix.Config
 
-config :my_app, MyApp.Repo,
-  log: false
-```
+    config :my_app, MyApp.Repo,
+      log: false
+    ```
 
-You'll also have to attach Timber's Telemetry event handler in your Application's `start` callback:
+4. Attach Timber's Telemetry event handler in your Application's `start` callback:
 
-```elixir
-# lib/my_app/application.ex
-def start(_type, _args) do
-  # ...
-  :ok = :telemetry.attach(
-    "timber-ecto-query-handler",
-    [:my_app, :repo, :query],
-    &Timber.Ecto.handle_event/4,
-    []
-  )
-  # ...
-  Supervisor.start_link(children, opts)
-end
-```
+    ```elixir
+    # lib/my_app/application.ex
+    def start(_type, _args) do
+      # ...
+      :ok = :telemetry.attach(
+        "timber-ecto-query-handler",
+        [:my_app, :repo, :query],
+        &Timber.Ecto.handle_event/4,
+        []
+      )
+      # ...
+      Supervisor.start_link(children, opts)
+    end
+    ```
 
 For more information, see the documentation for the
 [Timber.Ecto](https://hexdocs.pm/timber_ecto/Timber.Ecto.html) module.
