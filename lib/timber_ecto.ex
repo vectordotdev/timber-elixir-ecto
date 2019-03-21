@@ -38,6 +38,15 @@ defmodule Timber.Ecto do
     log: false
   ```
 
+  Configuration options for the telemetry handler:
+  * `query_time_ms_threshold` - See the "Log only slow queries" section
+  * `log_level` - See the "Controlling the Log Level" section
+  * `log_params` - Set to true to log the parameters sent with the prepared
+    statement. Defaults to true. Should be set to false if you don't want
+    sensitive information logged.
+
+  ### Controlling the Log Level
+
   By default, queries are logged at the `:debug` level. If you want to use a
   different level, the `:log_level` option can be passed to the
   `Telemetry.attach` call:
@@ -71,7 +80,6 @@ defmodule Timber.Ecto do
     [query_time_ms_threshold: 2_000]
     )
   ```
-  ```
 
   In the above example, only queries that exceed 2 seconds in execution time
   will be logged.
@@ -82,9 +90,11 @@ defmodule Timber.Ecto do
   def handle_event([_app, _repo, :query], _value, metadata, config) do
     query_time_ms_threshold = Keyword.get(config, :query_time_ms_threshold, 0)
     log_level = Keyword.get(config, :log_level, :debug)
+    log_params? = Keyword.get(config, :log_params, true)
 
     with {:ok, time} when is_integer(time) <- Map.fetch(metadata, :query_time),
          {:ok, query} <- Map.fetch(metadata, :query),
+         {:ok, params} <- Map.fetch(metadata, :params),
          duration_ms <- System.convert_time_unit(time, :native, :millisecond),
          true <- duration_ms >= query_time_ms_threshold do
       event = %{
@@ -94,11 +104,42 @@ defmodule Timber.Ecto do
         }
       }
 
-      message = ["Processed ", query, " in ", to_string(duration_ms), "ms"]
+      message = [
+        "Processed ",
+        query,
+        " in ",
+        to_string(duration_ms),
+        "ms",
+        maybe_add_params(params, log_params?)
+      ]
 
       Logger.log(log_level, message, event: event)
     end
 
     :ok
   end
+
+  def maybe_add_params(_params, false), do: []
+
+  def maybe_add_params(params, true) do
+    params = Enum.map(params, &decode_value/1)
+
+    [
+      " with args ",
+      inspect(params, charlists: false)
+    ]
+  end
+
+  defp decode_value(value) when is_list(value) do
+    Enum.map(value, &decode_value/1)
+  end
+
+  defp decode_value(binary) when is_binary(binary) do
+    case Ecto.UUID.cast(binary) do
+      {:ok, uuid} -> uuid
+      :error -> binary
+    end
+  end
+
+  defp decode_value(value), do: value
 end
