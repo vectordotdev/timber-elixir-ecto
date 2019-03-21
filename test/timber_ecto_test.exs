@@ -50,7 +50,7 @@ defmodule Timber.EctoTest do
             [:app, :repo, :query],
             1_000,
             %{query: query, query_time: timer, params: [42]},
-            [log_params: false]
+            log_params: false
           )
         end)
 
@@ -66,7 +66,7 @@ defmodule Timber.EctoTest do
             [:app, :repo, :query],
             1_000,
             %{query: query, query_time: 0, params: ["bob"]},
-            [log_params: true]
+            log_params: true
           )
         end)
 
@@ -85,11 +85,15 @@ defmodule Timber.EctoTest do
             [:app, :repo, :query],
             1_000,
             %{query: query, query_time: 0, params: params},
-            [log_params: true]
+            log_params: true
           )
         end)
 
-      assert log =~ "Processed SELECT * FROM table WHERE id in $1 in 0ms with args [[\"#{uuid1}\", \"#{uuid2}\"]]\n"
+      expected_log =
+        "Processed SELECT * FROM table WHERE id in $1 in 0ms with args" <>
+          " [[\"#{uuid1}\", \"#{uuid2}\"]]\n"
+
+      assert log =~ expected_log
     end
 
     test "query_time is nil" do
