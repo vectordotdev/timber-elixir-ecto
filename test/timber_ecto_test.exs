@@ -26,6 +26,7 @@ defmodule Timber.EctoTest do
     test "prints params" do
       query = "SELECT * FROM table WHERE id = $1"
       timer = 0
+
       log =
         capture_log(fn ->
           Timber.Ecto.handle_event(
