@@ -113,7 +113,7 @@ defmodule Timber.Ecto.MixProject do
       {:credo, "~> 1.0", only: [:dev, :test]},
       {:dialyxir, "~> 0.5", only: [:dev, :test]},
       {:earmark, "~> 1.2", only: [:dev]},
-      {:ex_doc, "~> 0.19.0", only: [:dev]},
+      {:ex_doc, "~> 0.20.0", only: [:dev]},
       {:excoveralls, "~> 0.10", only: [:dev, :test]}
     ]
   end
