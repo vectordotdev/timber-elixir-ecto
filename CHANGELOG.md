@@ -12,6 +12,11 @@ can be found in the [v1.x branch](https://github.com/timberio/timber-elixir-ecto
 
 ### Changed
 
+## [2.1.1] - 2019-04-04
+
+### Changed
+  - Added support for Ecto 3.1 and Telemetry 0.4.0
+
 ## [2.1.0] - 2019-02-25
 
 ### Changed

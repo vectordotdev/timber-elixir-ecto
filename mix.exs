@@ -1,7 +1,7 @@
 defmodule Timber.Ecto.MixProject do
   use Mix.Project
 
-  @version "2.1.0"
+  @version "2.1.1"
   @source_url "https://github.com/timberio/timber-elixir-ecto"
   @homepage_url "https://github.com/timberio/timber-elixir-ecto"
   @project_description """
