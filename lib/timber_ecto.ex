@@ -79,11 +79,11 @@ defmodule Timber.Ecto do
 
   require Logger
 
-  def handle_event([_app, _repo, :query], _value, metadata, config) do
+  def handle_event([_app, _repo, :query], value, metadata, config) do
     query_time_ms_threshold = Keyword.get(config, :query_time_ms_threshold, 0)
     log_level = Keyword.get(config, :log_level, :debug)
 
-    with {:ok, time} when is_integer(time) <- Map.fetch(metadata, :query_time),
+    with {:ok, time} when is_integer(time) <- get_query_time(value, metadata),
          {:ok, query} <- Map.fetch(metadata, :query),
          duration_ms <- System.convert_time_unit(time, :native, :millisecond),
          true <- duration_ms >= query_time_ms_threshold do
@@ -101,4 +101,8 @@ defmodule Timber.Ecto do
 
     :ok
   end
+
+  defp get_query_time(%{query_time: time}, _metadata), do: {:ok, time}
+  defp get_query_time(_value, %{query_time: time}), do: {:ok, time}
+  defp get_query_time(_value, _metadata), do: :error
 end
